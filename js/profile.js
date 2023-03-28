@@ -1,58 +1,39 @@
 $(document).ready(function () {
-  // Retrieve user data from Redis and populate form fields
+  // retrieve user data
   $.ajax({
-    type: "GET",
-    url: "php/redis.php",
-    data: { key: "user" },
+    url: "./php/getUserData.php",
+    type: "POST",
+    dataType: "JSON",
     success: function (data) {
-      if (data) {
-        var userData = JSON.parse(data);
-        $("#name").text(userData.name);
-        $("#email").text(userData.email);
-        $("#age").val(userData.age);
-        $("#dob").val(userData.dob);
-        $("#contact").val(userData.contact);
+      if (data.success) {
+        $("#name").val(data.name);
+        $("#email").val(data.email);
+        $("#age").val(data.age);
+        $("#dob").val(data.dob);
+        $("#contact").val(data.contact);
+      } else {
+        alert(data.message);
       }
+    },
+    error: function (jqXHR, textStatus, errorThrown) {
+      alert("Error retrieving user data: " + errorThrown);
     },
   });
 
-  // Edit button click event handler
-  $("#editButton").click(function () {
-    $("#age").prop("readonly", false);
-    $("#dob").prop("readonly", false);
-    $("#contact").prop("readonly", false);
-    $("#submitButton").prop("disabled", false);
-    $(this).hide();
-  });
-
-  // Submit updated user data to MongoDB
-  $("#updateProfileForm").submit(function (event) {
+  // update profile form submission
+  $("#updateProfileForm").on("submit", function (event) {
     event.preventDefault();
-    var age = $("#age").val();
-    var dob = $("#dob").val();
-    var contact = $("#contact").val();
+    var formData = $(this).serialize();
     $.ajax({
+      url: "./php/updateProfile.php",
       type: "POST",
-      url: "profile.php",
-      data: { age: age, dob: dob, contact: contact },
+      data: formData,
+      dataType: "JSON",
       success: function (data) {
-        if (data === "success") {
-          alert("Profile updated successfully!");
-          location.reload();
-        } else {
-          alert("Profile update failed. Please try again later.");
-        }
+        alert(data.message);
       },
-    });
-  });
-
-  // Logout button click event handler
-  $("#logoutButton").click(function () {
-    $.ajax({
-      type: "GET",
-      url: "php/logout.php",
-      success: function (data) {
-        window.location.replace("./login.html");
+      error: function (jqXHR, textStatus, errorThrown) {
+        alert("Error updating profile: " + errorThrown);
       },
     });
   });
